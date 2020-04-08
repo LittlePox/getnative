@@ -78,14 +78,11 @@ class DefineScaler:
 scaler_dict = {
     "Bilinear": DefineScaler("bilinear"),
     "Bicubic (b=1/3, c=1/3)": DefineScaler("bicubic", b=1/3, c=1/3),
-    "Bicubic (b=0.5, c=0)": DefineScaler("bicubic", b=.5, c=0),
     "Bicubic (b=0, c=0.5)": DefineScaler("bicubic", b=0, c=.5),
-    "Bicubic (b=1, c=0)": DefineScaler("bicubic", b=1, c=0),
-    "Bicubic (b=0, c=1)": DefineScaler("bicubic", b=0, c=1),
-    "Bicubic (b=0.2, c=0.5)": DefineScaler("bicubic", b=.2, c=.5),
+    "Bicubic (b=0.5, c=0.5)": DefineScaler("bicubic", b=.5, c=.5),
+    "Lanczos (2 Taps)": DefineScaler("lanczos", taps=2),
     "Lanczos (3 Taps)": DefineScaler("lanczos", taps=3),
     "Lanczos (4 Taps)": DefineScaler("lanczos", taps=4),
-    "Lanczos (5 Taps)": DefineScaler("lanczos", taps=5),
     "Spline16": DefineScaler("spline16"),
     "Spline36": DefineScaler("spline36"),
     }
@@ -120,7 +117,7 @@ class GetNative:
         resizer = self.scaler.descaler
         upscaler = self.scaler.upscaler
         clip_list = []
-        for h in range(self.min_h, self.max_h + 1):
+        for h in range(self.min_h, self.max_h + 1, 12):
             clip_list.append(resizer(src_luma32, self.getw(h), h))
         full_clip = core.std.Splice(clip_list, mismatch=True)
         full_clip = upscaler(full_clip, self.getw(src.height), src.height)
@@ -195,7 +192,7 @@ class GetNative:
 
         scaler = self.scaler
         bicubic_params = scaler.kernel == 'bicubic' and f'Scaling parameters:\nb = {scaler.b:.2f}\nc = {scaler.c:.2f}\n' or ''
-        best_values = f"{'p, '.join([str(r + self.min_h) for r in self.resolutions])}p"
+        best_values = f"{'p, '.join([str(r * 12 + self.min_h) for r in self.resolutions])}p"
         self.txt_output += f"Resize Kernel: {scaler.kernel}\n{bicubic_params}Native resolution(s) (best guess): " \
                            f"{best_values}\nPlease check the graph manually for more accurate results\n\n"
 
@@ -205,7 +202,7 @@ class GetNative:
         plot = pyplot
         plot.close('all')
         plot.style.use('dark_background')
-        plot.plot(range(self.min_h, self.max_h + 1), vals, '.w-')
+        plot.plot(range(self.min_h, self.max_h + 1, 12), vals, '.w-')
         plot.title(self.filename)
         plot.ylabel('Relative error')
         plot.xlabel('Resolution')
@@ -396,8 +393,8 @@ parser.add_argument('--bicubic-b', '-b', dest='b', type=_to_float, default="1/3"
 parser.add_argument('--bicubic-c', '-c', dest='c', type=_to_float, default="1/3", help='C parameter of bicubic resize')
 parser.add_argument('--lanczos-taps', '-t', dest='taps', type=int, default=3, help='Taps parameter of lanczos resize')
 parser.add_argument('--aspect-ratio', '-ar', dest='ar', type=_to_float, default=0, help='Force aspect ratio. Only useful for anamorphic input')
-parser.add_argument('--min-height', '-min', dest="min_h", type=int, default=500, help='Minimum height to consider')
-parser.add_argument('--max-height', '-max', dest="max_h", type=int, default=1000, help='Maximum height to consider')
+parser.add_argument('--min-height', '-min', dest="min_h", type=int, default=480, help='Minimum height to consider')
+parser.add_argument('--max-height', '-max', dest="max_h", type=int, default=960, help='Maximum height to consider')
 parser.add_argument('--generate-images', '-img-out', dest='img_out', action="store_true", default=False, help='Save detail mask as png')
 parser.add_argument('--plot-scaling', '-ps', dest='plot_scaling', type=str.lower, default='log', help='Scaling of the y axis. Can be "linear" or "log"')
 parser.add_argument('--plot-format', '-pf', dest='plot_format', type=str.lower, default='svg', help='Format of the output image. Specify multiple formats separated by commas. Can be svg, png, pdf, rgba, jp(e)g, tif(f), and probably more')
