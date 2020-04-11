@@ -34,8 +34,8 @@ height_range = range(low_end, high_end, stepping)
 
 scalers = [
 	["Bilinear"], ["Bicubic", 1/3, 1/3], ["Bicubic", 0, 0.5], ["Bicubic", 0.5, 0.5],
-    ["Lanczos", 2], ["Lanczos", 3], ["Lanczos", 4], 
-    ["Spline16"], ["Spline36"]
+	["Lanczos", 2], ["Lanczos", 3], ["Lanczos", 4], 
+	["Spline16"], ["Spline36"]
 ]
 
 last = core.std.Splice([muf.getnative(clip, tuple(height_range), *args) for args in scalers])
